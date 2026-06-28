@@ -1,0 +1,6 @@
+{
+  "name": "SparkClean Co.",
+  "description": "Premium landing page for SparkClean Co. - Professional residential and commercial cleaning services.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
