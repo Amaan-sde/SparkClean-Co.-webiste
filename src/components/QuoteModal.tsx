@@ -17,8 +17,8 @@ import {
   Clock,
   ChevronRight,
   ChevronLeft,
-  DollarSign,
   ShieldCheck,
+  Zap,
   Gift
 } from "lucide-react";
 import { QuoteFormData } from "../types";
@@ -30,12 +30,12 @@ interface QuoteModalProps {
 }
 
 const SERVICES_LIST = [
-  { id: "residential", name: "Residential Cleaning", basePrice: 120 },
-  { id: "deep", name: "Deep Cleaning Service", basePrice: 200 },
-  { id: "office", name: "Commercial & Office", basePrice: 250 },
-  { id: "move", name: "Move-In / Move-Out", basePrice: 220 },
-  { id: "windows", name: "Professional Window", basePrice: 90 },
-  { id: "carpet", name: "Premium Carpet Care", basePrice: 110 },
+  { id: "residential", name: "Signature Housekeeping", basePrice: 120 },
+  { id: "deep", name: "Deep Sanitization Refresh", basePrice: 200 },
+  { id: "office", name: "Executive Office & HQ", basePrice: 250 },
+  { id: "move", name: "Move-In / Move-Out Deposit", basePrice: 220 },
+  { id: "windows", name: "Crystal Window Washing", basePrice: 90 },
+  { id: "carpet", name: "Carpet & Upholstery Steam", basePrice: 110 },
 ];
 
 const HOME_SIZES = [
@@ -64,7 +64,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
     phone: "",
     serviceId: initialServiceId,
     homeSize: "small",
-    frequency: "once",
+    frequency: "biweekly",
     extraFridge: false,
     extraOven: false,
     extraWindows: false,
@@ -77,7 +77,6 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // Sync initial service selection if modal reopens with a different initial value
   useEffect(() => {
     if (initialServiceId) {
       setFormData((prev) => ({ ...prev, serviceId: initialServiceId }));
@@ -91,21 +90,16 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
 
     let base = selectedService.basePrice;
 
-    // Apply size multiplier (only for residential/deep/move cleaning)
     if (["residential", "deep", "move"].includes(formData.serviceId)) {
       const sizeObj = HOME_SIZES.find((s) => s.id === formData.homeSize);
-      if (sizeObj) {
-        base = base * sizeObj.multiplier;
-      }
+      if (sizeObj) base = base * sizeObj.multiplier;
     }
 
-    // Add extras
     if (formData.extraFridge) base += 35;
     if (formData.extraOven) base += 35;
     if (formData.extraWindows) base += 50;
     if (formData.extraDeep) base += 80;
 
-    // Apply frequency discounts
     const freqObj = FREQUENCIES.find((f) => f.id === formData.frequency);
     if (freqObj) {
       base = base * (1 - freqObj.discount);
@@ -131,18 +125,6 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
     }));
   };
 
-  const nextStep = () => {
-    if (step === 1) {
-      setStep(2);
-    }
-  };
-
-  const prevStep = () => {
-    if (step === 2) {
-      setStep(1);
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.phone || !formData.preferredDate) {
@@ -151,614 +133,278 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
     }
 
     setIsSubmitting(true);
-    // Simulate API request
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitted(true);
-
-      // Save quote history to localStorage
-      const existingQuotes = JSON.parse(localStorage.getItem("sparkclean_quotes") || "[]");
-      const newQuote = {
-        ...formData,
-        id: `q-${Date.now()}`,
-        estimatedPrice,
-        dateCreated: new Date().toLocaleDateString(),
-      };
-      localStorage.setItem("sparkclean_quotes", JSON.stringify([newQuote, ...existingQuotes]));
     }, 1500);
   };
 
-  const resetForm = () => {
-    setStep(1);
+  const handleResetAndClose = () => {
     setSubmitted(false);
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      serviceId: "residential",
-      homeSize: "small",
-      frequency: "once",
-      extraFridge: false,
-      extraOven: false,
-      extraWindows: false,
-      extraDeep: false,
-      preferredDate: "",
-      specialNotes: "",
-    });
+    setStep(1);
+    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Backdrop overlay */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+          onClick={handleResetAndClose}
+          className="fixed inset-0 bg-slate-950/85 backdrop-blur-md"
         />
 
-        {/* Modal Box */}
+        {/* Modal Window */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ type: "spring", duration: 0.5 }}
-          className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-10 flex flex-col max-h-[90vh]"
-          id="quote-modal-container"
+          className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden z-10 text-white"
         >
-          {/* Top Header */}
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          {/* Header Bar */}
+          <div className="p-6 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
-                <Sparkles className="w-5 h-5" id="modal-sparkles-icon" />
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-400 text-slate-950 flex items-center justify-center font-bold">
+                <Sparkles className="w-5 h-5 fill-current" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900 font-display">
-                  {submitted ? "Quote Request Received!" : "Free Clean Quote Calculator"}
-                </h3>
-                <p className="text-xs text-slate-500">
-                  {submitted ? "We will contact you shortly." : "Customize your plan & view live estimated pricing."}
-                </p>
+                <h3 className="text-lg font-bold font-display text-white">Instant Booking & Quote</h3>
+                <span className="text-xs text-emerald-400 font-mono">100% Satisfaction Guarantee</span>
               </div>
             </div>
             <button
-              onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/50 transition-colors"
-              aria-label="Close Modal"
-              id="close-modal-btn"
+              onClick={handleResetAndClose}
+              className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-900 border border-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Form Content */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-8">
+          {/* Progress Line */}
+          {!submitted && (
+            <div className="w-full bg-slate-950 h-1.5 flex">
+              <div
+                className="bg-gradient-to-r from-emerald-500 to-cyan-500 h-full transition-all duration-300"
+                style={{ width: step === 1 ? "50%" : "100%" }}
+              />
+            </div>
+          )}
+
+          {/* Modal Body */}
+          <div className="p-6 sm:p-8 max-h-[80vh] overflow-y-auto">
             {submitted ? (
-              // Success Screen
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center text-center py-12 px-4"
-                id="modal-success-screen"
-              >
-                <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-6 shadow-inner">
+              /* Success Celebration State */
+              <div className="text-center py-8 space-y-6">
+                <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-400 flex items-center justify-center shadow-xl">
                   <CheckCircle className="w-10 h-10" />
                 </div>
-                <h4 className="text-2xl font-bold text-slate-900 font-display mb-3">
-                  Thank You, {formData.name}!
-                </h4>
-                <p className="text-slate-600 max-w-md mb-8">
-                  Your quote estimate of{" "}
-                  <strong className="text-brand-600 font-semibold text-lg">
-                    ${estimatedPrice}
-                    {formData.frequency !== "once" ? "/session" : ""}
-                  </strong>{" "}
-                  has been saved! Our booking team is reviewing your schedule and will email you at{" "}
-                  <span className="text-slate-900 font-medium">{formData.email}</span> within 2 hours.
-                </p>
-
-                <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 w-full max-w-lg mb-8 text-left grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-slate-400 block text-xs">SERVICE</span>
-                    <span className="font-semibold text-slate-800">
-                      {SERVICES_LIST.find((s) => s.id === formData.serviceId)?.name}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-xs">FREQUENCY</span>
-                    <span className="font-semibold text-slate-800 capitalize">
-                      {formData.frequency}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-xs">PREFERRED DATE</span>
-                    <span className="font-semibold text-slate-800">
-                      {formData.preferredDate}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-xs">ESTIMATED TOTAL</span>
-                    <span className="font-bold text-brand-600">
-                      ${estimatedPrice}
-                    </span>
-                  </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black font-display text-white">
+                    Booking Request Confirmed!
+                  </h3>
+                  <p className="text-sm text-slate-300 max-w-md mx-auto font-light">
+                    Thank you, <strong className="text-emerald-400 font-semibold">{formData.name}</strong>! Your estimated total of <strong className="text-emerald-400 font-mono font-bold">${estimatedPrice}</strong> for {formData.preferredDate} has been received.
+                  </p>
                 </div>
-
-                <div className="flex gap-4">
-                  <button
-                    onClick={resetForm}
-                    className="px-6 py-3 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors"
-                    id="new-quote-btn"
-                  >
-                    Calculate Another Clean
-                  </button>
-                  <button
-                    onClick={onClose}
-                    className="px-6 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 shadow-lg shadow-brand-600/20 transition-all hover:-translate-y-0.5"
-                    id="done-quote-btn"
-                  >
-                    Done
-                  </button>
+                <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl text-xs text-slate-400 max-w-md mx-auto">
+                  Our specialist coordinator will call you within 15 minutes at <span className="text-white font-mono">{formData.phone}</span> to confirm access details.
                 </div>
-              </motion.div>
+                <button
+                  onClick={handleResetAndClose}
+                  className="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-extrabold rounded-xl text-sm transition-all cursor-pointer shadow-lg"
+                >
+                  Done & Return To Home
+                </button>
+              </div>
             ) : (
-              // Multi-step form
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Left Side: Fields */}
-                <div className="lg:col-span-7 space-y-6">
-                  {/* Step Progress */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <span
-                      className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-colors ${
-                        step === 1 ? "bg-brand-500 text-white" : "bg-brand-50 text-brand-600"
-                      }`}
-                    >
-                      1. Customise Service
-                    </span>
-                    <div className="h-[2px] w-8 bg-slate-200" />
-                    <span
-                      className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-colors ${
-                        step === 2 ? "bg-brand-500 text-white" : "bg-slate-100 text-slate-400"
-                      }`}
-                    >
-                      2. Booking Details
-                    </span>
-                  </div>
-
-                  {step === 1 ? (
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="space-y-6"
-                    >
-                      {/* Select Service */}
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                          Select Cleaning Service
-                        </label>
-                        <select
-                          name="serviceId"
-                          value={formData.serviceId}
-                          onChange={handleInputChange}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-medium focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
-                          id="quote-service-select"
-                        >
-                          {SERVICES_LIST.map((service) => (
-                            <option key={service.id} value={service.id}>
-                              {service.name} (Base: ${service.basePrice})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Select Home Size (Only show for residential types) */}
-                      {["residential", "deep", "move"].includes(formData.serviceId) && (
-                        <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-3">
-                            Home Size
-                          </label>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {HOME_SIZES.map((size) => (
-                              <button
-                                key={size.id}
-                                type="button"
-                                onClick={() =>
-                                  setFormData((prev) => ({ ...prev, homeSize: size.id }))
-                                }
-                                className={`flex flex-col items-center justify-center p-3 rounded-xl border text-center transition-all ${
-                                  formData.homeSize === size.id
-                                    ? "bg-brand-50 border-brand-500 text-brand-700 shadow-sm ring-2 ring-brand-500/10"
-                                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-                                }`}
-                              >
-                                <Home className="w-5 h-5 mb-1.5 opacity-80" />
-                                <span className="text-xs font-semibold">{size.label}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Select Frequency */}
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-3">
-                          Cleaning Frequency
-                        </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {FREQUENCIES.map((freq) => (
-                            <button
-                              key={freq.id}
-                              type="button"
-                              onClick={() =>
-                                setFormData((prev) => ({ ...prev, frequency: freq.id }))
-                              }
-                              className={`flex flex-col items-start p-3.5 rounded-xl border text-left transition-all ${
-                                formData.frequency === freq.id
-                                  ? "bg-brand-50 border-brand-500 text-brand-700 shadow-sm ring-2 ring-brand-500/10"
-                                  : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-                              }`}
-                            >
-                              <div className="flex justify-between items-center w-full mb-1">
-                                <span className="text-sm font-bold">{freq.label}</span>
-                                {freq.discount > 0 && (
-                                  <span className="text-[10px] px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-semibold">
-                                    SAVE {freq.discount * 100}%
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-xs text-slate-500">{freq.text}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Extras Addons */}
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-3">
-                          Add Premium Extras
-                        </label>
-                        <div className="grid grid-cols-2 gap-3">
-                          {[
-                            {
-                              id: "extraFridge",
-                              label: "Inside Fridge",
-                              price: "$35",
-                              desc: "Thorough scrub down",
-                            },
-                            {
-                              id: "extraOven",
-                              label: "Inside Oven",
-                              price: "$35",
-                              desc: "Grease & spot clean",
-                            },
-                            {
-                              id: "extraWindows",
-                              label: "Interior Windows",
-                              price: "$50",
-                              desc: "Sills, frames & glass",
-                            },
-                            {
-                              id: "extraDeep",
-                              label: "Deep Clean Detail",
-                              price: "$80",
-                              desc: "Baseboards, vents, detail",
-                            },
-                          ].map((addon) => {
-                            const isChecked = !!formData[addon.id as keyof QuoteFormData];
-                            return (
-                              <button
-                                key={addon.id}
-                                type="button"
-                                onClick={() => handleCheckboxChange(addon.id as keyof QuoteFormData)}
-                                className={`flex items-start p-3 rounded-xl border text-left transition-all ${
-                                  isChecked
-                                    ? "bg-brand-50 border-brand-500 text-brand-700 ring-2 ring-brand-500/10"
-                                    : "bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-                                }`}
-                              >
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-sm font-bold text-slate-800">{addon.label}</span>
-                                    <span className="text-xs font-semibold text-brand-600">{addon.price}</span>
-                                  </div>
-                                  <p className="text-xs text-slate-400 mt-0.5 leading-tight">{addon.desc}</p>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Next button */}
-                      <button
-                        type="button"
-                        onClick={nextStep}
-                        className="w-full py-3.5 bg-brand-600 text-white rounded-xl font-semibold shadow-lg shadow-brand-600/25 hover:bg-brand-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 mt-6 cursor-pointer"
-                        id="quote-step-next"
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {step === 1 ? (
+                  /* Step 1: Scope Selection */
+                  <div className="space-y-6">
+                    {/* Service Picker */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-extrabold text-slate-400 tracking-wider uppercase">
+                        1. Select Service Type
+                      </label>
+                      <select
+                        name="serviceId"
+                        value={formData.serviceId}
+                        onChange={handleInputChange}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-400 focus:outline-none"
                       >
-                        Continue to Booking Details
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-4"
+                        {SERVICES_LIST.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name} (From ${s.basePrice})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Home Size Picker */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-extrabold text-slate-400 tracking-wider uppercase">
+                        2. Home / Space Size
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {HOME_SIZES.map((size) => (
+                          <button
+                            type="button"
+                            key={size.id}
+                            onClick={() => setFormData({ ...formData, homeSize: size.id })}
+                            className={`p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                              formData.homeSize === size.id
+                                ? "bg-emerald-500/20 border-emerald-400 text-white"
+                                : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                            }`}
+                          >
+                            {size.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Frequency */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-extrabold text-slate-400 tracking-wider uppercase">
+                        3. Cleaning Frequency
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {FREQUENCIES.map((freq) => (
+                          <button
+                            type="button"
+                            key={freq.id}
+                            onClick={() => setFormData({ ...formData, frequency: freq.id })}
+                            className={`p-3 rounded-xl border text-left text-xs transition-all cursor-pointer ${
+                              formData.frequency === freq.id
+                                ? "bg-emerald-500/20 border-emerald-400 text-white font-bold"
+                                : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
+                            }`}
+                          >
+                            <span className="block font-bold">{freq.label}</span>
+                            <span className="text-[10px] text-slate-400 font-light">{freq.text}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Estimated price bar */}
+                    <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-between">
+                      <span className="text-xs text-slate-400 font-bold uppercase">Estimated Total:</span>
+                      <span className="text-2xl font-black font-mono text-emerald-400">${estimatedPrice}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
+                      className="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-extrabold rounded-xl text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
                     >
-                      {/* Name Field */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                            Your Name *
-                          </label>
-                          <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                              <User className="w-4 h-4" />
-                            </span>
-                            <input
-                              type="text"
-                              required
-                              name="name"
-                              value={formData.name}
-                              onChange={handleInputChange}
-                              placeholder="John Doe"
-                              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-3 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                            Phone Number *
-                          </label>
-                          <div className="relative">
-                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                              <Phone className="w-4 h-4" />
-                            </span>
-                            <input
-                              type="tel"
-                              required
-                              name="phone"
-                              value={formData.phone}
-                              onChange={handleInputChange}
-                              placeholder="(555) 000-0000"
-                              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-3 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Email Field */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                          Email Address *
-                        </label>
-                        <div className="relative">
-                          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                            <Mail className="w-4 h-4" />
-                          </span>
-                          <input
-                            type="email"
-                            required
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="john@example.com"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-3 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Date Select */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                          Preferred Cleaning Date *
-                        </label>
-                        <div className="relative">
-                          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                            <Calendar className="w-4 h-4" />
-                          </span>
-                          <input
-                            type="date"
-                            required
-                            name="preferredDate"
-                            value={formData.preferredDate}
-                            onChange={handleInputChange}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-3 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Special Instructions */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                          Special Instructions or Notes (Optional)
-                        </label>
-                        <textarea
-                          name="specialNotes"
-                          rows={3}
-                          value={formData.specialNotes}
+                      <span>Continue To Schedule & Contact</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  /* Step 2: Contact & Date Details */
+                  <div className="space-y-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-300">Your Full Name *</label>
+                        <input
+                          type="text"
+                          name="name"
+                          required
+                          value={formData.name}
                           onChange={handleInputChange}
-                          placeholder="Tell us about pet hair, gate codes, key dropoff details..."
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all resize-none"
+                          placeholder="Jane Doe"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-400 focus:outline-none"
                         />
                       </div>
-
-                      {/* Bottom Button Actions */}
-                      <div className="flex gap-3 pt-4">
-                        <button
-                          type="button"
-                          onClick={prevStep}
-                          className="px-4 py-3.5 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-1 cursor-pointer"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                          Back
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={isSubmitting}
-                          className="flex-1 py-3.5 bg-brand-600 disabled:bg-brand-400 text-white rounded-xl font-semibold shadow-lg shadow-brand-600/25 hover:bg-brand-700 hover:-translate-y-0.5 disabled:translate-y-0 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                          id="quote-submit-btn"
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <svg
-                                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                              >
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                ></circle>
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                ></path>
-                              </svg>
-                              Securing Your Cleaner...
-                            </>
-                          ) : (
-                            <>
-                              Submit Booking & Request Quote
-                              <CheckCircle className="w-4 h-4" />
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-
-                {/* Right Side: Sticky Pricing Card */}
-                <div className="lg:col-span-5">
-                  <div className="sticky top-0 bg-slate-50 border border-slate-150 p-6 rounded-2xl flex flex-col justify-between h-full">
-                    <div>
-                      <h5 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4 flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-brand-600" />
-                        Price Breakdown
-                      </h5>
-
-                      <div className="space-y-3.5 text-sm">
-                        <div className="flex justify-between items-start">
-                          <span className="text-slate-500">Service Base</span>
-                          <span className="font-semibold text-slate-800 text-right">
-                            ${SERVICES_LIST.find((s) => s.id === formData.serviceId)?.basePrice}
-                          </span>
-                        </div>
-
-                        {["residential", "deep", "move"].includes(formData.serviceId) && (
-                          <div className="flex justify-between items-start">
-                            <span className="text-slate-500">
-                              Home Size multiplier (
-                              {HOME_SIZES.find((s) => s.id === formData.homeSize)?.label})
-                            </span>
-                            <span className="font-semibold text-slate-800">
-                              x{HOME_SIZES.find((s) => s.id === formData.homeSize)?.multiplier}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Extras Addons itemized */}
-                        {(formData.extraFridge ||
-                          formData.extraOven ||
-                          formData.extraWindows ||
-                          formData.extraDeep) && (
-                          <div className="pt-2.5 border-t border-slate-200/60 space-y-2">
-                            <span className="text-slate-400 block text-xs font-semibold tracking-wider uppercase">
-                              Addons Included
-                            </span>
-                            {formData.extraFridge && (
-                              <div className="flex justify-between text-xs text-slate-600">
-                                <span>Inside Fridge</span>
-                                <span>+$35</span>
-                              </div>
-                            )}
-                            {formData.extraOven && (
-                              <div className="flex justify-between text-xs text-slate-600">
-                                <span>Inside Oven</span>
-                                <span>+$35</span>
-                              </div>
-                            )}
-                            {formData.extraWindows && (
-                              <div className="flex justify-between text-xs text-slate-600">
-                                <span>Interior Windows</span>
-                                <span>+$50</span>
-                              </div>
-                            )}
-                            {formData.extraDeep && (
-                              <div className="flex justify-between text-xs text-slate-600">
-                                <span>Deep Detail Addon</span>
-                                <span>+$80</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Discount */}
-                        {formData.frequency !== "once" && (
-                          <div className="flex justify-between items-center text-emerald-600 pt-2 border-t border-slate-200/60">
-                            <div className="flex items-center gap-1.5 text-xs font-semibold">
-                              <Gift className="w-3.5 h-3.5" />
-                              <span>Recurring Savings</span>
-                            </div>
-                            <span className="font-semibold text-xs">
-                              -
-                              {
-                                FREQUENCIES.find((f) => f.id === formData.frequency)
-                                  ?.discount! * 100
-                              }
-                              %
-                            </span>
-                          </div>
-                        )}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-300">Email Address *</label>
+                        <input
+                          type="email"
+                          name="email"
+                          required
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder="jane@example.com"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                        />
                       </div>
                     </div>
 
-                    {/* Total Section */}
-                    <div className="mt-8 pt-5 border-t border-slate-200">
-                      <div className="flex items-end justify-between mb-4">
-                        <div>
-                          <span className="text-slate-400 block text-xs font-bold tracking-wider uppercase">
-                            Estimated Total
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            {formData.frequency !== "once" ? "Billed per session" : "One-off total"}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-4xl font-extrabold text-slate-900 tracking-tight font-display">
-                            ${estimatedPrice}
-                          </span>
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-300">Phone Number *</label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          required
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          placeholder="(555) 000-0000"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                        />
                       </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-300">Preferred Date *</label>
+                        <input
+                          type="date"
+                          name="preferredDate"
+                          required
+                          value={formData.preferredDate}
+                          onChange={handleInputChange}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                        />
+                      </div>
+                    </div>
 
-                      {/* Security badge info */}
-                      <div className="bg-white border border-slate-100 p-3 rounded-xl flex items-start gap-2.5">
-                        <ShieldCheck className="w-5 h-5 text-brand-600 shrink-0 mt-0.5" />
-                        <div className="text-[11px] leading-snug text-slate-500">
-                          <strong className="text-slate-700 block font-semibold">
-                            Satisfaction Guarantee
-                          </strong>
-                          If you aren't 100% happy with your clean, we'll re-clean it for free. No credit card required to request a quote.
-                        </div>
-                      </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300">Special Entry Instructions (Optional)</label>
+                      <textarea
+                        name="specialNotes"
+                        rows={2}
+                        value={formData.specialNotes}
+                        onChange={handleInputChange}
+                        placeholder="Gate code, pet details, or specific focus areas..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:border-emerald-400 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-between">
+                      <span className="text-xs text-slate-400 font-bold uppercase">Locked In Total:</span>
+                      <span className="text-2xl font-black font-mono text-emerald-400">${estimatedPrice}</span>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setStep(1)}
+                        className="px-5 py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                      >
+                        Back
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="flex-1 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-extrabold rounded-xl text-sm transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
+                      >
+                        {isSubmitting ? (
+                          <span>Reserving Specialist...</span>
+                        ) : (
+                          <>
+                            <span>Confirm & Reserve Booking</span>
+                            <Sparkles className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
-                </div>
+                )}
               </form>
             )}
           </div>

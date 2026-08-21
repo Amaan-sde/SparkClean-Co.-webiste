@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
 import {
   Home,
@@ -14,7 +14,9 @@ import {
   Maximize2,
   ArrowRight,
   ShieldCheck,
-  Check
+  Check,
+  ChevronDown,
+  Zap
 } from "lucide-react";
 import { ServiceItem } from "../types";
 
@@ -22,54 +24,66 @@ interface ServicesProps {
   onOpenQuoteWithService: (serviceId: string) => void;
 }
 
-const SERVICES: ServiceItem[] = [
+const SERVICES: (ServiceItem & { category: string; features: string[] })[] = [
   {
     id: "residential",
-    title: "Residential Cleaning",
-    description: "Keep your home pristine with our regular, trusted housekeeping services.",
-    longDescription: "Dusting, vacuuming, mopping, bathroom sanitization, and kitchen scrubs tailored to your schedule.",
+    category: "residential",
+    title: "Signature Housekeeping",
+    description: "Tailored regular housekeeping designed for busy professionals & families.",
+    longDescription: "Complete dusting, organic mopping, bathroom HEPA sanitization, and kitchen surface polishing.",
     iconName: "Home",
     basePrice: 120,
+    features: ["Kitchen counters & stove top wipe", "Bathroom tile & mirror sanitization", "All floors vacuumed & steam mopped", "Trash emptied & linens refreshed"],
   },
   {
     id: "deep",
-    title: "Deep Cleaning",
-    description: "An intensive refresh detailing every corner, baseboard, and hidden spot.",
-    longDescription: "Ideal for spring cleaning, removing deep-seated grease, hard water deposits, and forgotten dust.",
+    category: "deep",
+    title: "Deep Sanitization Refresh",
+    description: "An intensive top-to-bottom detail scrub reaching hidden grime & baseboards.",
+    longDescription: "Eliminates hard water scale, deep grease, baseboard dust buildup, and unseen allergens.",
     iconName: "Sparkles",
     basePrice: 200,
+    features: ["Detailed baseboards & door frames", "Inside microwave & appliance exterior", "Deep grout steam scrubbing", "Light fixtures & ceiling fan dusting"],
   },
   {
     id: "office",
-    title: "Office Cleaning",
-    description: "Sanitized, professional workspaces that keep teams healthy and productive.",
-    longDescription: "Disinfecting high-touch points, desks, trash disposal, breakroom cleanups, and clean entries.",
+    category: "commercial",
+    title: "Executive Office & HQ",
+    description: "Sanitized, pristine commercial environments that elevate team health & focus.",
+    longDescription: "High-touch workstation disinfection, breakroom sanitation, glass partitions, and lobby maintenance.",
     iconName: "Building2",
     basePrice: 250,
+    features: ["Keyboard & phone surface sanitizing", "Conference table & chair wipes", "Restroom deep sanitation & restocking", "Lobby streak-free glass polish"],
   },
   {
     id: "move",
-    title: "Move-In / Move-Out",
-    description: "Worry-free empty home scrubbing to secure security deposits or greet new owners.",
-    longDescription: "Inside cabinets, detailed fridge and oven sanitizing, deep wall wipe-downs, and deep carpet grooming.",
+    category: "residential",
+    title: "Move-In / Move-Out Deposit",
+    description: "Worry-free empty property scrubbing designed to guarantee security deposit refunds.",
+    longDescription: "Scrubbing inside all drawers, cabinets, oven, fridge, deep closet wipes, and wall spot cleaning.",
     iconName: "Truck",
     basePrice: 220,
+    features: ["Inside all cabinets & drawers scrubbed", "Deep oven & refrigerator interior detail", "Wall scuff mark spot cleaning", "100% Deposit Refund Guarantee"],
   },
   {
     id: "windows",
-    title: "Window Cleaning",
-    description: "Squeaky clean, streak-free window washing to let natural sunlight pour in.",
-    longDescription: "Detailed sill scrubbing, tracks cleaning, and exterior/interior glass wiping using ecological cleaners.",
+    category: "speciality",
+    title: "Crystal Window Cleaning",
+    description: "Ultra-clear, streak-free interior & exterior glass washing with sill restoration.",
+    longDescription: "Ecological pure water wash leaving zero water residue, wiping window tracks and screen mesh.",
     iconName: "Sun",
     basePrice: 90,
+    features: ["Interior & exterior crystal glass wash", "Track & sill detailed scrubbing", "Screen mesh dust removal", "Streak-free optical clarity"],
   },
   {
     id: "carpet",
-    title: "Carpet Cleaning",
-    description: "Deep hot-water extraction restoring colors, textures, and removing stains.",
-    longDescription: "Advanced pet-odor neutralizers, pollen and dust allergen removal, and eco-friendly fast-dry grooming.",
+    category: "speciality",
+    title: "Carpet & Upholstery Hot Steam",
+    description: "Hot-water extraction destroying deep allergens, pet stains, and odors.",
+    longDescription: "Organic pet stain neutralizer, fiber fluffing, fast 2-hour dry technology, and allergen removal.",
     iconName: "Maximize2",
     basePrice: 110,
+    features: ["Hot water deep soil extraction", "Organic pet stain & odor breakdown", "Fast-drying fiber groom", "Allergen & dust mite elimination"],
   },
 ];
 
@@ -93,132 +107,161 @@ const IconMapper: React.FC<{ name: string; className?: string }> = ({ name, clas
 };
 
 export const Services: React.FC<ServicesProps> = ({ onOpenQuoteWithService }) => {
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const filteredServices = activeCategory === "all"
+    ? SERVICES
+    : SERVICES.filter((s) => s.category === activeCategory);
+
   return (
-    <section id="services" className="relative py-24 bg-white overflow-hidden subtle-noise">
-      {/* Decorative absolute components */}
-      <div className="absolute top-1/3 right-10 w-64 h-64 rounded-full bg-teal-50/40 blur-3xl -z-10" />
-      <div className="absolute bottom-10 left-5 w-80 h-80 rounded-full bg-brand-50/30 blur-3xl -z-10" />
+    <section id="services" className="relative py-24 bg-slate-950 text-white overflow-hidden">
+      {/* Background Radial Glow */}
+      <div className="absolute top-1/3 left-1/4 w-96 h-96 rounded-full bg-emerald-500/10 blur-[130px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Header content with nice styling */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <motion.span
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5 }}
-            className="text-xs uppercase font-extrabold text-brand-600 tracking-widest bg-brand-50 px-3.5 py-1.5 rounded-full"
+        
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold tracking-widest uppercase"
           >
-            OUR EXPERTISE
-          </motion.span>
+            <Zap className="w-3.5 h-3.5" />
+            <span>OUR EXPERTISE</span>
+          </motion.div>
+
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 font-display tracking-tight"
+            viewport={{ once: true }}
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-display tracking-tight"
           >
-            Premium Cleaning Services <br className="hidden sm:inline" />
-            Designed For Your Convenience
+            Bespoke Cleaning <span className="text-gradient-emerald">Mastery</span>
           </motion.h2>
+
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base sm:text-lg text-slate-500 font-light"
+            viewport={{ once: true }}
+            className="text-slate-400 font-light text-base sm:text-lg"
           >
-            From busy residential households to large-scale commercial complexes, our expert crew provides flawless services with customizable, direct plans.
+            Tailored solutions executed by certified specialists using hospital-grade eco technology.
           </motion.p>
+        </div>
+
+        {/* Category Filter Pills */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-14">
+          {[
+            { id: "all", label: "All Offerings" },
+            { id: "residential", label: "Residential" },
+            { id: "deep", label: "Deep Clean" },
+            { id: "commercial", label: "Commercial Office" },
+            { id: "speciality", label: "Speciality & Carpet" },
+          ].map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
+                activeCategory === cat.id
+                  ? "bg-emerald-500 text-slate-950 border-emerald-400 font-black shadow-lg shadow-emerald-500/20"
+                  : "bg-slate-900/80 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
         </div>
 
         {/* Responsive Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {SERVICES.map((service, index) => (
-            <motion.div
-              key={service.id}
-              initial={{ opacity: 0, y: 35 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6, delay: index * 0.08 }}
-              className="group bg-white rounded-2xl border border-slate-100 p-6 md:p-8 hover:shadow-xl hover:shadow-slate-100/70 hover:border-brand-100 transition-all flex flex-col justify-between"
-              id={`service-card-${service.id}`}
-            >
-              <div className="space-y-5">
-                {/* Icon Container with hover effects */}
-                <div className="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-3 duration-300 shadow-sm">
-                  <IconMapper
-                    name={service.iconName}
-                    className="w-7 h-7 group-hover:animate-pulse"
-                  />
+          {filteredServices.map((service, index) => {
+            const isExpanded = expandedId === service.id;
+            return (
+              <motion.div
+                key={service.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+                className="group bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-8 hover:border-emerald-500/50 hover:bg-slate-900 transition-all flex flex-col justify-between backdrop-blur-xl shadow-xl hover:shadow-2xl hover:shadow-emerald-500/10"
+                id={`service-card-${service.id}`}
+              >
+                <div className="space-y-6">
+                  {/* Icon & Category Tag */}
+                  <div className="flex items-center justify-between">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center transition-transform group-hover:scale-110 duration-300">
+                      <IconMapper name={service.iconName} className="w-7 h-7" />
+                    </div>
+                    <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                      {service.category}
+                    </span>
+                  </div>
+
+                  {/* Title & Descriptions */}
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-extrabold text-white font-display tracking-tight">
+                      {service.title}
+                    </h3>
+                    <p className="text-xs text-slate-300 font-light leading-relaxed">
+                      {service.description}
+                    </p>
+                  </div>
+
+                  {/* Feature checklist */}
+                  <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : service.id)}
+                      className="text-xs font-bold text-emerald-400 flex items-center justify-between w-full hover:underline cursor-pointer py-1"
+                    >
+                      <span>{isExpanded ? "Hide Scope Details" : "View Scope Checklist"}</span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {isExpanded && (
+                      <motion.ul
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="space-y-1.5 pt-2 text-xs text-slate-300"
+                      >
+                        {service.features.map((feat, idx) => (
+                          <li key={idx} className="flex items-center gap-2">
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </motion.ul>
+                    )}
+                  </div>
                 </div>
 
-                {/* Service Details */}
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-slate-900 font-display tracking-tight">
-                    {service.title}
-                  </h3>
-                  <p className="text-sm font-medium text-slate-600 leading-snug">
-                    {service.description}
-                  </p>
-                  <p className="text-xs text-slate-400 font-light leading-relaxed pt-1.5 border-t border-slate-100">
-                    {service.longDescription}
-                  </p>
-                </div>
-              </div>
+                {/* Card Footer CTA & Pricing */}
+                <div className="mt-8 pt-5 border-t border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                      Starting Rate
+                    </span>
+                    <span className="text-xl font-extrabold text-white font-display">
+                      ${service.basePrice}
+                    </span>
+                  </div>
 
-              {/* Card Footer CTA & pricing */}
-              <div className="mt-8 pt-5 border-t border-slate-150/70 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] text-slate-400 block font-bold tracking-wider uppercase">
-                    Starting at
-                  </span>
-                  <span className="text-lg font-extrabold text-slate-900 font-display">
-                    ${service.basePrice}
-                  </span>
+                  <button
+                    onClick={() => onOpenQuoteWithService(service.id)}
+                    className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                    id={`service-book-btn-${service.id}`}
+                  >
+                    <span>Instant Quote</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-
-                <button
-                  onClick={() => onOpenQuoteWithService(service.id)}
-                  className="flex items-center gap-1.5 text-xs font-bold text-brand-600 group-hover:text-brand-700 hover:underline cursor-pointer"
-                  id={`service-book-btn-${service.id}`}
-                >
-                  Book Quote
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* Quality trust footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="mt-16 bg-slate-50 border border-slate-150 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6"
-        >
-          <div className="flex items-center gap-4 text-left">
-            <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 font-display">
-                Need a tailored solution?
-              </h4>
-              <p className="text-xs text-slate-500">
-                We custom design cleaning scopes for corporate offices, events, and medical clinics.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => onOpenQuoteWithService("residential")}
-            className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-md shrink-0 cursor-pointer"
-            id="services-custom-quote-btn"
-          >
-            Custom Quote Request
-          </button>
-        </motion.div>
       </div>
     </section>
   );

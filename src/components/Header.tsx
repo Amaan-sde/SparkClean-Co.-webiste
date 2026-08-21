@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Sparkles, Menu, X } from "lucide-react";
+import { Sparkles, Menu, X, PhoneCall, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 interface HeaderProps {
@@ -30,37 +30,45 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQuote }) => {
 
   const navLinks = [
     { name: "Home", href: "#home" },
+    { name: "Simulator", href: "#simulator" },
+    { name: "Before & After", href: "#before-after" },
+    { name: "Price Estimator", href: "#calculator" },
     { name: "Services", href: "#services" },
-    { name: "Why Choose Us", href: "#why-choose-us" },
-    { name: "Testimonials", href: "#testimonials" },
-    { name: "Contact", href: "#footer" },
+    { name: "Why Us", href: "#why-choose-us" },
   ];
 
   return (
     <>
       <header
-        className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 ${
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
           isScrolled
-            ? "bg-white/80 backdrop-blur-md shadow-md shadow-slate-100/30 border-b border-slate-100 py-3"
+            ? "bg-slate-950/85 backdrop-blur-xl shadow-2xl border-b border-slate-800/80 py-3"
             : "bg-transparent py-5"
         }`}
         id="main-app-header"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          
           {/* Logo */}
-          <a href="#home" className="flex items-center gap-2 group cursor-pointer">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-300">
-              <Sparkles className="w-5 h-5 animate-pulse" />
+          <a href="#home" className="flex items-center gap-3 group cursor-pointer">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-400 flex items-center justify-center text-slate-950 shadow-lg shadow-emerald-500/25 group-hover:scale-105 transition-transform duration-300">
+              <Sparkles className="w-5 h-5 fill-current animate-pulse" />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-extrabold text-slate-900 tracking-tight font-display leading-tight">
-                SparkClean <span className="text-brand-600">Co.</span>
+              <span className="text-xl font-black text-white tracking-tight font-display leading-none">
+                SparkClean <span className="text-gradient-emerald">Co.</span>
               </span>
-              <span className="text-[10px] text-slate-400 tracking-widest font-semibold uppercase leading-none">
-                Premium Cleaning
+              <span className="text-[10px] text-emerald-400 tracking-widest font-mono font-bold uppercase leading-tight pt-0.5">
+                LUXURY CLEANING
               </span>
             </div>
           </a>
+
+          {/* Availability Status Badge (Hidden on mobile) */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] font-medium text-slate-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span>Slots open in your area today</span>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
@@ -69,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQuote }) => {
                 <a
                   key={link.name}
                   href={link.href}
-                  className="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors link-underline py-1"
+                  className="text-xs font-bold text-slate-300 hover:text-emerald-400 transition-colors uppercase tracking-wider py-1"
                 >
                   {link.name}
                 </a>
@@ -78,18 +86,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQuote }) => {
 
             <button
               onClick={onOpenQuote}
-              className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-brand-500/20 hover:shadow-brand-500/35 transition-all hover:-translate-y-0.5"
+              className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 text-xs font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all hover:-translate-y-0.5 cursor-pointer flex items-center gap-1.5"
               id="header-cta-btn"
             >
-              Get Free Quote
+              <Calendar className="w-4 h-4" />
+              <span>Get Free Quote</span>
             </button>
           </nav>
 
-          {/* Mobile Hamburguer Button */}
+          {/* Mobile Hamburger Button */}
           <div className="flex items-center md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-slate-700 hover:text-brand-600 rounded-lg hover:bg-slate-100 transition-colors"
+              className="p-2 text-slate-300 hover:text-emerald-400 rounded-xl bg-slate-900 border border-slate-800 transition-colors"
               aria-label="Toggle menu"
               id="mobile-menu-toggle"
             >
@@ -103,19 +112,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQuote }) => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="fixed top-[65px] left-0 w-full bg-white z-30 border-b border-slate-100 shadow-xl md:hidden overflow-hidden"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed top-[70px] left-0 w-full bg-slate-950/95 backdrop-blur-2xl z-40 border-b border-slate-800 shadow-2xl md:hidden overflow-hidden"
             id="mobile-navigation-panel"
           >
-            <div className="px-4 py-6 space-y-4 flex flex-col">
+            <div className="px-5 py-6 space-y-4 flex flex-col">
               {navLinks.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-base font-semibold text-slate-700 hover:text-brand-600 hover:bg-slate-50 px-3 py-2.5 rounded-xl transition-all"
+                  className="text-sm font-bold text-slate-200 hover:text-emerald-400 hover:bg-slate-900 px-4 py-3 rounded-2xl transition-all"
                 >
                   {link.name}
                 </a>
@@ -126,10 +135,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQuote }) => {
                     setIsMobileMenuOpen(false);
                     onOpenQuote();
                   }}
-                  className="w-full py-3 bg-brand-600 text-white font-bold rounded-xl text-center shadow-lg shadow-brand-600/20"
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-extrabold rounded-2xl text-center shadow-lg shadow-emerald-500/20 text-sm"
                   id="mobile-menu-cta-btn"
                 >
-                  Get Free Quote
+                  Get Instant Free Quote
                 </button>
               </div>
             </div>

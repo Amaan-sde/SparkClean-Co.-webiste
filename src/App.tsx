@@ -6,19 +6,16 @@
 import { useState } from "react";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
+import { InteractiveCleanSimulator } from "./components/InteractiveCleanSimulator";
+import { BeforeAfterSlider } from "./components/BeforeAfterSlider";
+import { LiveCalculator } from "./components/LiveCalculator";
+import { AICleanAssistant } from "./components/AICleanAssistant";
 import { Services } from "./components/Services";
 import { WhyChooseUs } from "./components/WhyChooseUs";
 import { Testimonials } from "./components/Testimonials";
 import { CTABanner } from "./components/CTABanner";
 import { Footer } from "./components/Footer";
 import { QuoteModal } from "./components/QuoteModal";
-import {
-  SmoothCurvedDivider,
-  WaveDivider,
-  AngledDivider,
-  CurvedTopDivider,
-  GradientFadeDivider
-} from "./components/Dividers";
 
 export default function App() {
   const [isQuoteOpen, setIsQuoteOpen] = useState(false);
@@ -35,69 +32,47 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative bg-white">
-      {/* Sticky Blurred Header */}
+    <div className="min-h-screen flex flex-col relative bg-slate-950 text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950">
+      
+      {/* Sticky Glass Navbar */}
       <Header onOpenQuote={handleOpenQuote} />
 
-      {/* Main Sections with Premium Separators in direct flow order */}
+      {/* Main Flow */}
       <main className="flex-grow">
         
-        {/* HERO SECTION (Dark theme overlay) */}
+        {/* HERO SECTION */}
         <Hero onOpenQuote={handleOpenQuote} />
 
-        {/* Hero to Services Divider (Smooth Curve from Dark bg-slate-950 to White) */}
-        <SmoothCurvedDivider
-          fillColor="fill-white"
-          backgroundColor="bg-slate-950"
-          className="relative z-10 -mt-1"
-        />
+        {/* INTERACTIVE CLEAN SIMULATOR */}
+        <InteractiveCleanSimulator />
 
-        {/* SERVICES SECTION (White bg) */}
+        {/* BEFORE & AFTER COMPARISON SLIDER */}
+        <BeforeAfterSlider />
+
+        {/* REAL-TIME COST ESTIMATOR */}
+        <LiveCalculator onOpenQuote={handleOpenQuote} />
+
+        {/* SPARKY AI CONCIERGE */}
+        <AICleanAssistant onOpenQuote={handleOpenQuote} />
+
+        {/* BESPOKE SERVICES GRID */}
         <Services onOpenQuoteWithService={handleOpenQuoteWithService} />
 
-        {/* Services to Why Choose Us Divider (Wave Transition from White to Light Gray bg-slate-50) */}
-        <WaveDivider
-          fillColor="fill-slate-50"
-          backgroundColor="bg-white"
-          className="relative z-10 -mt-1"
-        />
-
-        {/* WHY CHOOSE US SECTION (Light Gray bg-slate-50) */}
+        {/* WHY CHOOSE US & COMPARISON TABLE */}
         <WhyChooseUs />
 
-        {/* Why Choose Us to Testimonials (Soft Gradient Fade from Light Gray bg-slate-50 to White) */}
-        <GradientFadeDivider
-          from="from-slate-50"
-          to="to-white"
-          height="h-24"
-        />
-
-        {/* TESTIMONIALS SECTION (White bg) */}
+        {/* DELIGHTED CUSTOMER TESTIMONIALS */}
         <Testimonials />
 
-        {/* Testimonials to CTA Banner Divider (Angled separator from White into Teal gradient start) */}
-        <AngledDivider
-          fillColor="fill-brand-800"
-          backgroundColor="bg-white"
-          className="relative z-10 -mt-1"
-        />
-
-        {/* CTA BANNER (Soft Teal Gradient bg) */}
+        {/* SPECIAL OFFER CTA BANNER */}
         <CTABanner onOpenQuote={handleOpenQuote} />
 
-        {/* CTA Banner to Footer Divider (Curved divider from Teal gradient down to Dark slate bg-slate-950) */}
-        <CurvedTopDivider
-          fillColor="fill-slate-950"
-          backgroundColor="bg-brand-800"
-          className="relative z-10 -mt-1"
-        />
-
-        {/* FOOTER SECTION (Dark slate bg-slate-950) */}
+        {/* FOOTER */}
         <Footer onOpenQuote={handleOpenQuote} />
 
       </main>
 
-      {/* Interactive Clean Estimate & Booking Modal */}
+      {/* Interactive Booking & Estimate Modal */}
       <QuoteModal
         isOpen={isQuoteOpen}
         onClose={() => setIsQuoteOpen(false)}
